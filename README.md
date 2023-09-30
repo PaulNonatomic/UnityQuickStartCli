@@ -17,17 +17,17 @@ UnityQuickStartCli is a command-line interface (CLI) tool designed to automate t
 
 To install the tool globally, navigate to the project directory and run:
 
-\`\`\`bash
+```bash
 dotnet tool install UnityQuickStart --global --add-source ./dist
-\`\`\`
+```
 
 ### Uninstallation
 
 To uninstall the tool:
 
-\`\`\`bash
+```bash
 dotnet tool uninstall UnityQuickStart --global
-\`\`\`
+```
 
 ### Build from Rider
 
@@ -39,9 +39,9 @@ dotnet tool uninstall UnityQuickStart --global
 
 Run the CLI tool with the following command:
 
-\`\`\`bash
+```bash
 unityquick [options]
-\`\`\`
+```
 
 ### Options
 
@@ -51,9 +51,9 @@ unityquick [options]
 
 ### Examples
 
-\`\`\`bash
+```bash
 unityquick --set-unity-path "C:\\Program Files\\Unity\\Hub\\Editor"
-\`\`\`
+```
 
 ## Code Structure
 
@@ -64,13 +64,10 @@ unityquick --set-unity-path "C:\\Program Files\\Unity\\Hub\\Editor"
 
 ## Contributing
 
-// Contribution guidelines here
+// Contribution guidelines to come
 
 ## License
 
-This project is licensed under the MIT License.
-
-\`\`\`
-MIT License
+This project is licensed under the MIT License. 
 
 Copyright (c) 2023 Noantomic Ltd
