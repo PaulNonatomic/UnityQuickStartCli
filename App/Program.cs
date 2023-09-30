@@ -17,7 +17,6 @@ public class Program
 	private static string _projectName;
 	private static bool _localRepoCreated;
 	private static bool _githubRepoCreated;
-	private static bool _unityProjectCreated;
 
 	static void Main(string[] args)
 	{
@@ -47,8 +46,9 @@ public class Program
 		SetProjectName();
 		CreateLocalRepo();
 		CreateRemoteRepo();
-		CreateUnityProject();
-		OpenUnityProject();
+		
+		_untiyCli.CreateUnityProject(_projectPath, _userSettings);
+		_untiyCli.OpenUnityProject(_projectPath, _userSettings);
 	}
 
 	private static void SetProjectName()
@@ -242,106 +242,7 @@ public class Program
 		}
 	}
 
-	private static void CreateUnityProject()
-	{
-		try
-		{
-			var cts = new CancellationTokenSource();
-			var spinnerTask = Task.Run(() => Spinner(cts.Token, "Creating Unity project"));
-			var psi = new ProcessStartInfo
-			{
-				FileName = GetPathToUnityVersion(),
-				Arguments = @$"-batchmode -quit -createProject {_projectPath}",
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true,
-				Verb = "runas"
-			};
-			
-			using (var process = new Process())
-			{
-				process.StartInfo = psi;
-				process.Start();
-				process.WaitForExit();
-
-				cts.Cancel();
-				spinnerTask.Wait();
-				
-				var output = process.StandardOutput.ReadToEnd();
-				var error = process.StandardError.ReadToEnd();
-
-				if (process.ExitCode == 0)
-				{
-					_unityProjectCreated = true;
-					Output.WriteSuccessWithTick($"Ok Unity {_userSettings.GetUnityVersion()} project created at {_projectPath}");
-				}
-				else
-				{
-					_unityProjectCreated = false;
-					Output.WriteError($"Unity project creation failed: {error}");
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			_unityProjectCreated = false;
-			Output.WriteError($"Unity project creation failed: {ex.Message}");
-		}
-	}
-
-	private static string GetPathToUnityVersion()
-	{
-		return Path.Combine(_userSettings.GetUnityInstallPath(), 
-			_userSettings.GetUnityVersion(), 
-			"Editor",
-			"Unity.exe");
-	}
-
-	private static void OpenUnityProject()
-	{
-		var createRepo = UserInput.GetYesNo($"Would you like to open the Unity project at {_projectPath}:");
-		if (!createRepo)
-		{
-			Output.WriteSuccessWithTick($"Ok skip opening the project");
-			return;
-		}
-		
-		try
-		{
-			var process = new Process
-			{
-				StartInfo = new ProcessStartInfo
-				{
-					FileName = GetPathToUnityVersion(),
-					Arguments = $"-projectPath {_projectPath}",
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
-				}
-			};
-
-			process.Start();
-
-			var output = process.StandardOutput.ReadToEnd();
-			var error = process.StandardError.ReadToEnd();
-			process.WaitForExit();
-			
-			if (process.ExitCode == 0)
-			{
-				Output.WriteSuccessWithTick($"Ok Unity {_userSettings.GetUnityVersion()} project opened at {_projectPath}");
-			}
-			else
-			{
-				Output.WriteError($"Opening Unity project at {_projectPath} failed: {error}");
-			}
-		}
-		catch (Exception ex)
-		{
-			Output.WriteError($"Opening Unity project at {_projectPath} failed: {ex.Message}");
-		}
-	}
+	
 	
 	private static void CreateRemoteRepo()
 	{
@@ -441,19 +342,5 @@ public class Program
 			_localRepoCreated = false;
 			Output.WriteError($"Repo creation failed: {ex.Message}");
 		}
-	}
-	
-	private static void Spinner(CancellationToken token, string message = "Processing")
-	{
-		var spinner = new char[] { '|', '/', '-', '\\' };
-		var i = 0;
-		
-		while (!token.IsCancellationRequested)
-		{
-			Console.Write($"\r{message} {spinner[i++ % 4]}");
-			Thread.Sleep(200);
-		}
-		
-		Console.Write("\r                  \r");
 	}
 }
