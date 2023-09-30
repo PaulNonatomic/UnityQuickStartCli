@@ -1,7 +1,9 @@
 ﻿using UnityQuickStart.App.Github;
+using UnityQuickStart.App.HelpSystem;
 using UnityQuickStart.App.Input;
 using UnityQuickStart.App.Settings;
 using UnityQuickStart.App.Unity;
+using UnityQuickStart.Cli.Utilities;
 
 namespace UnityQuickStart.App;
 
@@ -10,17 +12,37 @@ public class Program
 	private static GithubCli _github;
 	private static UnityCli _untiyCli;
 	private static UserSettings _userSettings;
+	private static CommandLineArgs _cmdArgs;
 
+	private const string DefaultUnityPath = @"C:\Program Files\Unity\Hub\Editor";
+	
 	static void Main(string[] args)
 	{
+		var aliases = new Dictionary<string, string>
+		{
+			{ "h", "help" }
+		};
+		
+		_cmdArgs = new CommandLineArgs(args, aliases);
+		
+		if (DisplayHelp()) return;
+		
 		_github = new GithubCli();
 		_untiyCli = new UnityCli();
 		_userSettings = new UserSettings();
-
+		
 		GetUnityInstallPath();
 		CreateLocalRepo();
 		CreateRemoteRepo();
 		CreateUnityProject();
+	}
+
+	private static bool DisplayHelp()
+	{
+		if (!_cmdArgs.HasFlag("help")) return false;
+		
+		HelpPage.Display();
+		return true;
 	}
 
 	private static void GetUnityInstallPath()
@@ -29,7 +51,7 @@ public class Program
 
 		if (string.IsNullOrEmpty(unityPath))
 		{
-			unityPath = @"C:\Program Files\Unity\Hub\Editor";
+			unityPath = DefaultUnityPath;
 		}
 		
 		// Update Unity Install Path
