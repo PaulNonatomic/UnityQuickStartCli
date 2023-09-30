@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using UnityQuickStart.App.IO;
 using UnityQuickStart.App.Project;
 
@@ -6,6 +7,30 @@ namespace UnityQuickStart.App.Github;
 
 public class Git
 {
+	public async Task CreateGitIgnoreFile(QuickStartProject project)
+	{
+		var createGitIgnore = UserInput.GetYesNo($"Would you like to include a Unity gitignore:");
+		if (!createGitIgnore)
+		{
+			Output.WriteSuccessWithTick($"Ok skipping gitignore");
+			return; 
+		}
+		
+		// Get the directory of the executing assembly
+		var assembly = Assembly.GetEntryAssembly();
+		var templateContent = string.Empty;
+		var gitIgnorePath = Path.Combine(project.ProjectPath, ".gitignore");
+		
+		using (var stream = assembly.GetManifestResourceStream("UnityQuickStart.data.gitIgnoreTemplate.txt"))
+		using (var reader = new StreamReader(stream))
+		{
+			templateContent = await reader.ReadToEndAsync();
+			await File.WriteAllTextAsync(gitIgnorePath, templateContent);
+		}
+		
+		Output.WriteSuccessWithTick($"Ok gitignore add at {gitIgnorePath}");
+	}
+	
 	public async Task<bool> CreateLocalRepo(QuickStartProject project)
 	{
 		var success = false;

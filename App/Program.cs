@@ -45,6 +45,7 @@ public class Program
 		await _project.SetProjectName();
 		
 		var createdLocalRepo = await _git.CreateLocalRepo(_project);
+		if(createdLocalRepo) await _git.CreateGitIgnoreFile(_project);
 		if(createdLocalRepo) await _git.CreateRemoteRepo(_project);
 		
 		var createdUnityProject = await _untiyCli.CreateUnityProject(_project);
