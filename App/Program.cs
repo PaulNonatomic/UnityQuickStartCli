@@ -66,6 +66,9 @@ public class Program
 		{
 			projectPath = Environment.CurrentDirectory;
 		}
+
+		//@Todo add support for relative paths
+		var isPathRooted = Path.IsPathRooted(projectPath);
 		
 		var validDirectory = Directory.Exists(projectPath);
 		if (!validDirectory)
