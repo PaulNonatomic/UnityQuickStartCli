@@ -120,47 +120,31 @@ public class UnityCli
 	
 	public async Task SetUnityPath(CommandLineArgs args, QuickStartProject project)
 	{
-		if (!args.HasFlag(Constants.SetUnityPathArg))
+		if (args.HasFlag(Constants.SetUnityPathArg))
 		{
-			if (string.IsNullOrEmpty(project.UserSettings.GetUnityInstallPath()))
-			{
-				await EnterUnityPath(project.UserSettings);
-			}
-			
+			await EnterUnityPath(project.UserSettings);
 			return;
 		}
 		
-		var newUnityPath = UserInput.GetString(
-			"Enter the Unity installation path: ",
-			required: false,
-			additionalInfo: $@"This is the path to the folder containing all installed Unity versions, typically found at {Constants.DefaultUnityPath}",
-			infoColor: OutputColor.Info
-		);
-		
-		if (string.IsNullOrEmpty(newUnityPath)) return;
-		
-		project.UserSettings.SetUnityInstallPath(newUnityPath);
-		Output.WriteSuccessWithTick($"Unity Install Path updated to: {newUnityPath}");
+		if (string.IsNullOrEmpty(project.UserSettings.GetUnityInstallPath()))
+		{
+			await EnterUnityPath(project.UserSettings);
+		}
 	}
 	
 	public async Task EnterUnityPath(UserSettings userSettings)
 	{
-		var unityPath = userSettings.GetUnityInstallPath();
-
-		if (string.IsNullOrEmpty(unityPath))
-		{
-			unityPath = Constants.DefaultUnityPath;
-		}
-		
-		// Update Unity Install Path
+		Output.WriteInfo($@"This is the path to the folder containing all installed Unity versions");
+		Output.WriteHint($"Press enter to use typical: {Constants.DefaultUnityPath}");
 		var newUnityPath = UserInput.GetString(
 			"Enter the Unity installation path: ",
-			required: false,
-			additionalInfo: $@"This is the path to the folder containing all installed Unity versions, typically found at {unityPath}",
-			infoColor: OutputColor.Info
+			required: false
 		);
-		
-		if (string.IsNullOrEmpty(newUnityPath)) return;
+
+		if (string.IsNullOrEmpty(newUnityPath))
+		{
+			newUnityPath = Constants.DefaultUnityPath;
+		}
 		
 		userSettings.SetUnityInstallPath(newUnityPath);
 		Output.WriteSuccessWithTick($"Unity Install Path updated to: {newUnityPath}");
