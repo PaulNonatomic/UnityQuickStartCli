@@ -1,7 +1,8 @@
-﻿using System.Diagnostics;
+﻿
 using UnityQuickStart.App.Github;
 using UnityQuickStart.App.HelpSystem;
 using UnityQuickStart.App.IO;
+using UnityQuickStart.App.Project;
 using UnityQuickStart.App.Settings;
 using UnityQuickStart.App.Unity;
 
@@ -9,16 +10,12 @@ namespace UnityQuickStart.App;
 
 public class Program
 {
-	private static GithubCli _github;
+	private static Git _git;
 	private static UnityCli _untiyCli;
-	private static UserSettings _userSettings;
+	private static QuickStartProject _project;
 	private static CommandLineArgs _cmdArgs;
-	private static string _projectPath;
-	private static string _projectName;
-	private static bool _localRepoCreated;
-	private static bool _githubRepoCreated;
-
-	static void Main(string[] args)
+	
+	static async Task Main(string[] args)
 	{
 		Console.OutputEncoding = System.Text.Encoding.UTF8;
 		
@@ -31,145 +28,35 @@ public class Program
 		};
 		
 		_cmdArgs = new CommandLineArgs(args, aliases);
-		_github = new GithubCli();
+		_git = new Git();
 		_untiyCli = new UnityCli();
-		_userSettings = new UserSettings();
+		_project = new QuickStartProject();
 		
 		if (DisplayHelp()) return;
 		
 		AppHeader.Write();
 
 		ClearSettings();
-		SetUnityPath();
-		SetUnityVersion();
-		SetProjectPath();
-		SetProjectName();
-		CreateLocalRepo();
-		CreateRemoteRepo();
 		
-		_untiyCli.CreateUnityProject(_projectPath, _userSettings);
-		_untiyCli.OpenUnityProject(_projectPath, _userSettings);
-	}
-
-	private static void SetProjectName()
-	{
-		var currentDirectoryName = Path.GetFileName(Environment.CurrentDirectory);
+		await _untiyCli.SetUnityPath(_cmdArgs, _project);
+		await _untiyCli.SetUnityVersion(_project);
 		
-		Output.WriteHint($"Press enter to use current directory name: {currentDirectoryName}");
-		var projectName = UserInput.GetString(
-			"Enter the project name: ",
-			required: false
-		);
+		await _project.SetProjectPath();
+		await _project.SetProjectName();
 		
-		if (string.IsNullOrEmpty(projectName))
-		{
-			projectName = currentDirectoryName;
-		}
-		else
-		{
-			//check if the project name matches the current directory name
-			if (currentDirectoryName != projectName)
-			{
-				var createSubDir = UserInput.GetYesNo($"Would you like to create a {projectName} sub directory?");
-				var newProjectPath = Path.Combine(_projectPath, projectName);
-				
-				if (createSubDir)
-				{
-					try
-					{
-						Directory.CreateDirectory(newProjectPath);
-						
-						_projectPath = newProjectPath;
-						Directory.SetCurrentDirectory(_projectPath);
-						Output.WriteSuccessWithTick($"Ok project path updated to: {_projectPath}");
-					}
-					catch (Exception e)
-					{
-						Output.WriteError(e.Message);
-						SetProjectName();
-						return;
-					}
-				}
-			}
-		}
+		var createdLocalRepo = await _git.CreateLocalRepo(_project);
+		if(createdLocalRepo) await _git.CreateRemoteRepo(_project);
 		
-		_projectName = projectName;
-		Output.WriteSuccessWithTick($"Ok project name set: {projectName}");
-	}
-
-	private static void SetProjectPath()
-	{
-		Output.WriteHint($"Press enter to use current directory: {Environment.CurrentDirectory}");
-		
-		var projectPath = UserInput.GetString(
-			"Enter the project path: ",
-			required: false
-		);
-
-		if (string.IsNullOrEmpty(projectPath))
-		{
-			projectPath = Environment.CurrentDirectory;
-		}
-
-		//@Todo add support for relative paths
-		var isPathRooted = Path.IsPathRooted(projectPath);
-		
-		var validDirectory = Directory.Exists(projectPath);
-		if (!validDirectory)
-		{
-			Output.WriteError("Invalid path");
-			var createPath = UserInput.GetYesNo($"Would you like to create the path: {projectPath}");
-
-			if (createPath)
-			{
-				try
-				{
-					Directory.CreateDirectory(projectPath);
-				}
-				catch (Exception e)
-				{
-					Output.WriteError(e.Message);
-					SetProjectPath();
-					return;
-				}
-			}
-		}
-
-		_projectPath = projectPath;
-		Directory.SetCurrentDirectory(_projectPath);
-		Output.WriteSuccessWithTick($"Ok project path set: {projectPath}");
-	}
-
-	private static void SetUnityPath()
-	{
-		if (!_cmdArgs.HasFlag(Constants.SetUnityPathArg))
-		{
-			if (string.IsNullOrEmpty(_userSettings.GetUnityInstallPath()))
-			{
-				EnterUnityPath();
-			}
-			
-			return;
-		}
-		
-		var newUnityPath = UserInput.GetString(
-			"Enter the Unity installation path: ",
-			required: false,
-			additionalInfo: $@"This is the path to the folder containing all installed Unity versions, typically found at {Constants.DefaultUnityPath}",
-			infoColor: OutputColor.Info
-		);
-		
-		if (string.IsNullOrEmpty(newUnityPath)) return;
-		
-		_userSettings.SetUnityInstallPath(newUnityPath);
-		Output.WriteSuccessWithTick($"Unity Install Path updated to: {newUnityPath}");
+		var createdUnityProject = await _untiyCli.CreateUnityProject(_project);
+		if(createdUnityProject) await _untiyCli.OpenUnityProject(_project);
+		if(createdUnityProject) Output.WriteSuccessWithTick("Complete");
 	}
 
 	private static void ClearSettings()
 	{
 		if (!_cmdArgs.HasFlag(Constants.ClearSettingsArg)) return;
 
-		_userSettings.Clear();
+		_project.UserSettings.Clear();
 		
 		Output.WriteSuccessWithTick($"Settings cleared");
 		
@@ -184,163 +71,7 @@ public class Program
 		return true;
 	}
 
-	private static void EnterUnityPath()
-	{
-		var unityPath = _userSettings.GetUnityInstallPath();
-
-		if (string.IsNullOrEmpty(unityPath))
-		{
-			unityPath = Constants.DefaultUnityPath;
-		}
-		
-		// Update Unity Install Path
-		var newUnityPath = UserInput.GetString(
-			"Enter the Unity installation path: ",
-			required: false,
-			additionalInfo: $@"This is the path to the folder containing all installed Unity versions, typically found at {unityPath}",
-			infoColor: OutputColor.Info
-		);
-		
-		if (string.IsNullOrEmpty(newUnityPath)) return;
-		
-		_userSettings.SetUnityInstallPath(newUnityPath);
-		Output.WriteSuccessWithTick($"Unity Install Path updated to: {newUnityPath}");
-	}
-
-	private static void SetUnityVersion()
-	{
-		while (true)
-		{
-			var installPath = _userSettings.GetUnityInstallPath();
-			var versions = PathUtils.CommaSeperatedDirectoryList(installPath);
-			var lastVersion = _userSettings.GetUnityVersion();
-
-			Output.WriteInfo($@"Available versions: {versions}");
-
-			if (!string.IsNullOrEmpty(lastVersion))
-			{
-				Output.WriteHint($"Press Enter to use last version: {lastVersion}.");
-			}
-
-			var selectedVersion = UserInput.GetString("Enter the Unity version: ", required: false);
-
-			if (string.IsNullOrEmpty(selectedVersion))
-			{
-				selectedVersion = lastVersion;
-			}
-
-			var validVersion = PathUtils.PathContainsDirectory(installPath, selectedVersion);
-			if (!validVersion)
-			{
-				Output.WriteError($"Invalid version {Environment.NewLine}");
-				continue;
-			}
-
-			_userSettings.SetUnityVersion(selectedVersion);
-			Output.WriteSuccessWithTick($"Ok lets use version: {selectedVersion}");
-			break;
-		}
-	}
+	
 
 	
-	
-	private static void CreateRemoteRepo()
-	{
-		if (!_localRepoCreated) return;
-		
-		var createRepo = UserInput.GetYesNo($"Would you like to connect your local repo to a github repo:");
-		if (!createRepo)
-		{
-			Output.WriteSuccessWithTick($"Ok skipping github repo");
-			return;
-		}
-		
-		try
-		{
-			var process = new Process
-			{
-				StartInfo = new ProcessStartInfo
-				{
-					FileName = "gh",
-					Arguments = $"repo create {_projectName} --private --source {_projectPath}",
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
-				}
-			};
-
-			process.Start();
-
-			var output = process.StandardOutput.ReadToEnd();
-			var error = process.StandardError.ReadToEnd();
-			process.WaitForExit();
-			
-			if (process.ExitCode == 0)
-			{
-				_githubRepoCreated = true;
-				Output.WriteSuccessWithTick($"Ok Github repo {_projectName} created");
-			}
-			else
-			{
-				_githubRepoCreated = false;
-				Output.WriteError($"Github repo creation failed: {error}");
-			}
-		}
-		catch (Exception ex)
-		{
-			_githubRepoCreated = false;
-			Output.WriteError($"Github repo creation failed: {ex.Message}");
-		}
-	}
-
-	private static void CreateLocalRepo()
-	{
-		var createRepo = UserInput.GetYesNo($"Would you like to create a local git repo:");
-		if (!createRepo)
-		{
-			Output.WriteSuccessWithTick($"Ok skipping local repo");
-			return;
-		}
-		
-		try
-		{
-			var process = new Process
-			{
-				StartInfo = new ProcessStartInfo
-				{
-					FileName = "git",
-					Arguments = "init",
-					WorkingDirectory = _projectPath,
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
-				}
-			};
-
-			process.Start();
-
-			var output = process.StandardOutput.ReadToEnd();
-			var error = process.StandardError.ReadToEnd();
-
-			process.WaitForExit();
-
-			if (process.ExitCode == 0)
-			{
-				_localRepoCreated = true;
-				Output.WriteSuccessWithTick($"Ok local repo created in {_projectPath}");
-			}
-			else
-			{
-				_localRepoCreated = false;
-				Output.WriteError($"Repo creation failed: {error}");
-			}
-		}
-		catch (Exception ex)
-		{
-			_localRepoCreated = false;
-			Output.WriteError($"Repo creation failed: {ex.Message}");
-		}
-	}
 }
