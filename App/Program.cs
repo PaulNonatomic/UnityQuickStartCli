@@ -247,7 +247,7 @@ public class Program
 		try
 		{
 			var cts = new CancellationTokenSource();
-			var spinnerTask = Task.Run(() => Spinner(cts.Token));
+			var spinnerTask = Task.Run(() => Spinner(cts.Token, "Creating Unity project"));
 			var psi = new ProcessStartInfo
 			{
 				FileName = GetPathToUnityVersion(),
@@ -443,15 +443,17 @@ public class Program
 		}
 	}
 	
-	private static void Spinner(CancellationToken token)
+	private static void Spinner(CancellationToken token, string message = "Processing")
 	{
-		char[] spinner = new char[] { '|', '/', '-', '\\' };
-		int i = 0;
+		var spinner = new char[] { '|', '/', '-', '\\' };
+		var i = 0;
+		
 		while (!token.IsCancellationRequested)
 		{
-			Console.SetCursorPosition(0, 0);
-			Console.Write($"Processing {spinner[i++ % 4]}");
+			Console.Write($"\r{message} {spinner[i++ % 4]}");
 			Thread.Sleep(200);
 		}
+		
+		Console.Write("\r                  \r");
 	}
 }

@@ -15,6 +15,7 @@
 		public static string GetString(string prompt, bool required = true, string additionalInfo = null, ConsoleColor infoColor = ConsoleColor.Cyan)
 		{
 			string input;
+			
 			do
 			{
 				DisplayPrompt(prompt, additionalInfo, infoColor);
