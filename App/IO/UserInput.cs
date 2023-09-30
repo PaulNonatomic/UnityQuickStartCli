@@ -1,4 +1,4 @@
-﻿namespace UnityQuickStart.App.Input
+﻿namespace UnityQuickStart.App.IO
 {
 	/// <summary>
 	/// Provides methods for obtaining user input from the console.
@@ -28,7 +28,7 @@
 
 				if (required && string.IsNullOrEmpty(input))
 				{
-					Console.WriteLine("Input is required. Please try again.");
+					Output.WriteLine("Input is required. Please try again.");
 				}
 			} while (string.IsNullOrEmpty(input));
 
@@ -59,12 +59,12 @@
 					}
 					else
 					{
-						Console.WriteLine($"Please enter a number between {min} and {max}.");
+						Output.WriteLine($"Please enter a number between {min} and {max}.");
 					}
 				}
 				else
 				{
-					Console.WriteLine("Invalid input. Please enter a valid integer.");
+					Output.WriteLine("Invalid input. Please enter a valid integer.");
 				}
 			} while (true);
 		}
@@ -92,7 +92,7 @@
 					case "no":
 						return false;
 					default:
-						Console.WriteLine("Invalid input. Please enter 'y' for yes or 'n' for no.");
+						Output.WriteLine("Invalid input. Please enter 'y' for yes or 'n' for no.");
 						break;
 				}
 				
@@ -108,12 +108,10 @@
 		{
 			if (!string.IsNullOrEmpty(additionalInfo))
 			{
-				Console.ForegroundColor = infoColor;
-				Console.WriteLine($" ({additionalInfo})");
-				Console.ResetColor();
+				Output.WriteLine($"{additionalInfo}", infoColor);
 			}
 			
-			Console.Write(prompt);
+			Output.Write($">> {prompt}");
 		}
 	}
 }

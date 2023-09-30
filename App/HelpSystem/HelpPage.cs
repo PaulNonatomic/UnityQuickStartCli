@@ -1,33 +1,36 @@
-﻿namespace UnityQuickStart.App.HelpSystem
+﻿using UnityQuickStart.App.IO;
+using UnityQuickStart.App.Settings;
+
+namespace UnityQuickStart.App.HelpSystem
 {
 	public class HelpPage
 	{
 		public static void Display()
 		{
-			Console.WriteLine("UnityQuickStart.Cli Help Page");
-			Console.WriteLine("=============================");
-			Console.WriteLine();
+			Output.WriteSectionHeader("UnityQuickStart.Cli Help Page");
+			Output.WriteLine();
 
 			// Description
-			Console.WriteLine("Description:");
-			Console.WriteLine("  A CLI tool to automate the setup and creation of Unity projects, local and remote Git repositories.");
-			Console.WriteLine();
+			Output.WriteSectionHeader("Description:");
+			Output.Write("  A CLI tool to automate the setup and creation of Unity projects, local and remote Git repositories.");
+			Output.WriteLine();
 
 			// Usage
-			Console.WriteLine("Usage:");
-			Console.WriteLine("  unityquick [options]");
-			Console.WriteLine();
+			Output.WriteSectionHeader("Usage:");
+			Output.WriteLine("  unityquick [options]");
+			Output.WriteLine();
 
 			// Options
-			Console.WriteLine("Options:");
-			Console.WriteLine("  --help                  Show this help page.");
-			Console.WriteLine("  --set-unity-path        Set the Unity installation path.");
-			Console.WriteLine();
+			Output.WriteSectionHeader("Options:");
+			Output.WriteLine("  -h --help               Show this help page.");
+			Output.WriteLine("  -sup --set-unity-path   Set the Unity installation path.");
+			Output.WriteLine("  -cs --clear-settings    Resets the settings to default.");
+			Output.WriteLine();
 
 			// Examples
-			Console.WriteLine("Examples:");
-			Console.WriteLine(@"  unityquick --set-unity-path C:\Program Files\Unity\Hub\Editor");
-			Console.WriteLine();
+			Output.WriteSectionHeader("Examples:");
+			Output.WriteLine($@"  unityquick --set-unity-path {Constants.DefaultUnityPath}");
+			Output.WriteLine();
 		}
 	}
 }

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace UnityQuickStart.Cli.Utilities
+﻿namespace UnityQuickStart.App.IO
 {
     public class CommandLineArgs
     {
