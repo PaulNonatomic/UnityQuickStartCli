@@ -84,6 +84,12 @@ public class Git
 		return success;
 	}
 
+	/// <summary>
+	/// @Todo add support for Github teams
+	/// @Todo add support for Github templates
+	/// </summary>
+	/// <param name="project"></param>
+	/// <returns></returns>
 	public async Task<bool> CreateRemoteRepo(QuickStartProject project)
 	{
 		var success = false;
