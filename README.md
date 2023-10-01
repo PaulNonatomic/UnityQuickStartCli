@@ -46,13 +46,13 @@ unityquick [options]
 ### Options
 
 - `-h, --help`: Show the help page.
-- `-sup, --set-unity-path`: Set the Unity installation path.
-- `-cs, --clear-settings`: Resets the settings to default.
+- `-c, --clear`: Resets the settings to default.
+- `-p, --path`: Set the Unity installation path.
 
 ### Examples
 
 ```bash
-unityquick --set-unity-path "C:\\Program Files\\Unity\\Hub\\Editor"
+unityquick -p "C:\Program Files\Unity\Hub\Editor"
 ```
 
 ## Code Structure
