@@ -100,6 +100,61 @@ public class Git
 			Output.WriteSuccessWithTick($"Ok skipping github repo");
 			return success;
 		}
+
+		var exists = await DoesRepoExist(project);
+		return false;
+		// success = await MakeRemoteRepo(project);
+		//
+		// return success;
+	}
+	
+	private async Task<bool> DoesRepoExist(QuickStartProject project)
+	{
+		var exists = false;
+		
+		try
+		{
+			var process = new Process
+			{
+				StartInfo = new ProcessStartInfo
+				{
+					FileName = "gh",
+					Arguments = "api api user --jq \".login\"",
+					RedirectStandardOutput = true,
+					RedirectStandardError = true,
+					UseShellExecute = false,
+					CreateNoWindow = true
+				}
+			};
+
+			process.Start();
+			var output = process.StandardOutput.ReadToEnd();
+			var error = process.StandardError.ReadToEnd();
+			process.WaitForExit();
+			
+			if (process.ExitCode == 0)
+			{
+				exists = true;
+				Output.WriteSuccessWithTick($"Ok Github username {output}");
+			}
+			else
+			{
+				exists = false;
+				Output.WriteError($"Github failed to find username: {error}");
+			}
+		}
+		catch (Exception ex)
+		{
+			exists = false;
+			Output.WriteError($"Github failed to find username: {ex.Message}");
+		}
+		
+		return exists;
+	}
+
+	private async Task<bool> MakeRemoteRepo(QuickStartProject project)
+	{
+		var success = false;
 		
 		try
 		{
@@ -138,7 +193,7 @@ public class Git
 			success = false;
 			Output.WriteError($"Github repo creation failed: {ex.Message}");
 		}
-
+		
 		return success;
 	}
 }
