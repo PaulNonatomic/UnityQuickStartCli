@@ -29,7 +29,7 @@ To run this project, you'll need the following software installed:
 
 ### Global Installation
 
-1. Download the latest NuGet package from the [releases page](https://github.com/octo-org/octo-repo/releases/latest).
+1. Download the latest NuGet package from the [releases page](https://github.com/PaulNonatomic/UnityQuickStartCli/releases/latest).
 2. To install the tool globally replacing <path> with the path to the directory containing the NuGet package.
 
 <b>Note do not set the path directly to the NuGet package!</b>
