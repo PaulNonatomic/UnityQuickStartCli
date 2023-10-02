@@ -23,6 +23,7 @@ namespace UnityQuickStart.App
 			_untiyCli = new UnityCli();
 		
 			if (DisplayHelp()) return;
+			if (DisplayVersion()) return;
 			
 			AppHeader.Write();
 		
@@ -41,8 +42,18 @@ namespace UnityQuickStart.App
 			var createdUnityProject = await _untiyCli.CreateUnityProject(_project);
 			if(createdUnityProject) await _untiyCli.OpenUnityProject(_project);
 			if(createdUnityProject) Output.WriteSuccessWithTick("Complete");
+
+			if(createdUnityProject) _project.OpenProjectDirectory();
 		}
+
+		private static bool DisplayVersion()
+		{
+			if(!_project.Args.Contains(Constants.Version)) return false;
 			
+			_project.LogVersion();
+			return true;
+		}
+
 		private static bool DisplayHelp()
 		{
 			if(!_project.Args.Contains(Constants.Help)) return false;

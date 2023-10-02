@@ -11,14 +11,31 @@ UnityQuickStartCli is a command-line interface (CLI) tool designed to automate t
 - **Customizable Settings**: Allows you to set Unity installation paths and versions.
 - **User-Friendly Interface**: Provides a clean and straightforward CLI.
 
+## Dependencies
+
+To run this project, you'll need the following software installed:
+
+- [.NET SDK](https://dotnet.microsoft.com/download)
+- [GitHub CLI](https://cli.github.com/)
+- [Unity](https://unity.com/)
+
+### Installation Steps
+
+1. **.NET SDK**: Download and install from [here](https://dotnet.microsoft.com/download).
+2. **GitHub CLI**: Follow the installation guide [here](https://cli.github.com/).
+3. **Unity**: Download and install Unity Hub from [here](https://unity.com/download).
+
 ## Installation
 
 ### Global Installation
 
-To install the tool globally, navigate to the project directory and run:
+1. Download the latest NuGet package from the [releases page](https://github.com/PaulNonatomic/UnityQuickStartCli/releases/latest).
+2. To install the tool globally replacing <path> with the path to the directory containing the NuGet package.
+
+<b>Note do not set the path directly to the NuGet package!</b>
 
 ```bash
-dotnet tool install UnityQuickStart --global --add-source ./dist
+dotnet tool install --global --add-source <path> UnityQuickStart
 ```
 
 ### Uninstallation
@@ -26,7 +43,7 @@ dotnet tool install UnityQuickStart --global --add-source ./dist
 To uninstall the tool:
 
 ```bash
-dotnet tool uninstall UnityQuickStart --global
+dotnet tool uninstall --global UnityQuickStart
 ```
 
 ### Build from Rider
@@ -54,6 +71,12 @@ unityquick [options]
 ```bash
 unityquick -p "C:\Program Files\Unity\Hub\Editor"
 ```
+
+
+https://github.com/PaulNonatomic/UnityQuickStartCli/assets/4581647/6147804f-edf1-4548-8b46-555aa074e24b
+
+
+
 
 ## Code Structure
 

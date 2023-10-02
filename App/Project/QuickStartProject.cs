@@ -1,4 +1,7 @@
-﻿using UnityQuickStart.App.IO;
+﻿using System.Diagnostics;
+using System.Reflection;
+using System.Runtime.InteropServices;
+using UnityQuickStart.App.IO;
 using UnityQuickStart.App.Settings;
 
 namespace UnityQuickStart.App.Project
@@ -128,6 +131,28 @@ namespace UnityQuickStart.App.Project
 			ProjectPath = projectPath;
 			Directory.SetCurrentDirectory(projectPath);
 			Output.WriteSuccessWithTick($"Ok project path set: {projectPath}");
+		}
+
+		public void OpenProjectDirectory()
+		{
+			if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+			{
+				Process.Start("explorer.exe", ProjectPath);
+			}
+			else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+			{
+				Process.Start("open", ProjectPath);
+			}
+			else
+			{
+				Console.WriteLine("Unsupported OS");
+			}
+		}
+
+		public void LogVersion()
+		{
+			var version = Assembly.GetExecutingAssembly().GetName().Version;
+			Output.WriteInfo($"Application Version: {version}");
 		}
 	}
 }

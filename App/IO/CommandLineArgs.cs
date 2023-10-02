@@ -15,7 +15,7 @@ namespace UnityQuickStart.App.IO
                 { "h", "help" },
                 { "p", "path" },
                 { "c", "clear" },
-                { "v", "version" }
+                { "v", "version" },
             };
 
             for (var i = 0; i < args.Length; i++)
