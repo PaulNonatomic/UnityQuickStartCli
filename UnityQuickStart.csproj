@@ -8,6 +8,7 @@
         <PackAsTool>true</PackAsTool>
         <ToolCommandName>unityquick</ToolCommandName>
         <PackageOutputPath>./dist</PackageOutputPath>
+        <Version>1.1.0</Version>
     </PropertyGroup>
 
     <ItemGroup>
