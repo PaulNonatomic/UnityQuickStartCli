@@ -41,6 +41,8 @@ namespace UnityQuickStart.App
 			var createdUnityProject = await _untiyCli.CreateUnityProject(_project);
 			if(createdUnityProject) await _untiyCli.OpenUnityProject(_project);
 			if(createdUnityProject) Output.WriteSuccessWithTick("Complete");
+
+			if(createdUnityProject) _project.OpenProjectDirectory();
 		}
 			
 		private static bool DisplayHelp()
