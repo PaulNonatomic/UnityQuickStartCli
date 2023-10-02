@@ -12,11 +12,9 @@ namespace UnityQuickStart.App.Unity
 			return Path.Combine(installPath, version, "Editor", "Unity.exe");
 		}
 
-		public async Task OpenUnityProject(QuickStartProject project)
+		public async Task OpenUnityProject(QuickStartProject project, string unityVersion, string installPath)
 		{
-			var version = project.UserSettings.GetUnityVersion();
-			var installPath = project.UserSettings.GetUnityInstallPath();
-			var fileName = GetPathToUnityVersion(installPath, version);
+			var fileName = GetPathToUnityVersion(installPath, unityVersion);
 			var cliArgs = $"-projectPath {project.ProjectPath}";
 
 			var createRepo = UserInput.GetYesNo($"Would you like to open the Unity project at {project.ProjectPath}:");
@@ -47,7 +45,7 @@ namespace UnityQuickStart.App.Unity
 
 				if (process.ExitCode == 0)
 				{
-					Output.WriteSuccessWithTick($"Ok Unity {version} project opened at {project.ProjectPath}");
+					Output.WriteSuccessWithTick($"Ok Unity {unityVersion} project opened at {project.ProjectPath}");
 				}
 				else
 				{
@@ -60,12 +58,10 @@ namespace UnityQuickStart.App.Unity
 			}
 		}
 
-		public async Task<bool> CreateUnityProject(QuickStartProject project)
+		public async Task<bool> CreateUnityProject(QuickStartProject project, string unityVersion, string installPath)
 		{
 			var success = false;
-			var version = project.UserSettings.GetUnityVersion();
-			var installPath = project.UserSettings.GetUnityInstallPath();
-			var fileName = GetPathToUnityVersion(installPath, version);
+			var fileName = GetPathToUnityVersion(installPath, unityVersion);
 			var cliArgs = @$"-batchmode -quit -createProject {project.ProjectPath}";
 
 			try
@@ -100,7 +96,7 @@ namespace UnityQuickStart.App.Unity
 					if (process.ExitCode == 0)
 					{
 						success = true;
-						Output.WriteSuccessWithTick($"Ok Unity {version} project created at {project.ProjectPath}");
+						Output.WriteSuccessWithTick($"Ok Unity {unityVersion} project created at {project.ProjectPath}");
 					}
 					else
 					{
@@ -116,81 +112,6 @@ namespace UnityQuickStart.App.Unity
 			}
 
 			return success;
-		}
-
-		public async Task SetUnityPath(QuickStartProject project)
-		{
-			if (project.Args.Contains(Constants.Path))
-			{
-				var path = project.Args.Get(Constants.Path);
-				if (!string.IsNullOrEmpty(path))
-				{
-					project.UserSettings.SetUnityInstallPath(path);
-					Output.WriteSuccessWithTick($"Unity Install Path updated to: {path}");
-					return;
-				}
-
-				await EnterUnityPath(project.UserSettings);
-				return;
-			}
-
-			if (string.IsNullOrEmpty(project.UserSettings.GetUnityInstallPath()))
-			{
-				await EnterUnityPath(project.UserSettings);
-			}
-		}
-
-		public async Task EnterUnityPath(UserSettings userSettings)
-		{
-			Output.WriteInfo($@"This is the path to the folder containing all installed Unity versions");
-			Output.WriteHint($"Press enter to use typical: {Constants.DefaultUnityPath}");
-			var newUnityPath = UserInput.GetString(
-				"Enter the Unity installation path: ",
-				required: false
-			);
-
-			if (string.IsNullOrEmpty(newUnityPath))
-			{
-				newUnityPath = Constants.DefaultUnityPath;
-			}
-
-			userSettings.SetUnityInstallPath(newUnityPath);
-			Output.WriteSuccessWithTick($"Unity Install Path updated to: {newUnityPath}");
-		}
-
-		public async Task SetUnityVersion(QuickStartProject project)
-		{
-			while (true)
-			{
-				var installPath = project.UserSettings.GetUnityInstallPath();
-				var versions = PathUtils.CommaSeperatedDirectoryList(installPath);
-				var lastVersion = project.UserSettings.GetUnityVersion();
-
-				Output.WriteInfo($@"Available versions: {versions}");
-
-				if (!string.IsNullOrEmpty(lastVersion))
-				{
-					Output.WriteHint($"Press Enter to use last version: {lastVersion}.");
-				}
-
-				var selectedVersion = UserInput.GetString("Enter the Unity version: ", required: false);
-
-				if (string.IsNullOrEmpty(selectedVersion))
-				{
-					selectedVersion = lastVersion;
-				}
-
-				var validVersion = PathUtils.PathContainsDirectory(installPath, selectedVersion);
-				if (!validVersion)
-				{
-					Output.WriteError($"Invalid version {Environment.NewLine}");
-					continue;
-				}
-
-				project.UserSettings.SetUnityVersion(selectedVersion);
-				Output.WriteSuccessWithTick($"Ok lets use version: {selectedVersion}");
-				break;
-			}
 		}
 	}
 }
