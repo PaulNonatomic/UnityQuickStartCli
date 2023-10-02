@@ -72,6 +72,12 @@ unityquick [options]
 unityquick -p "C:\Program Files\Unity\Hub\Editor"
 ```
 
+
+https://github.com/PaulNonatomic/UnityQuickStartCli/assets/4581647/6147804f-edf1-4548-8b46-555aa074e24b
+
+
+
+
 ## Code Structure
 
 - [`Git.cs`](https://github.com/PaulNonatomic/UnityQuickStartCli/blob/develop/App/Git/Git.cs): Handles Git-related functionalities.
