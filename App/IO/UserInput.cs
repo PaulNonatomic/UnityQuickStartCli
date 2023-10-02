@@ -20,7 +20,7 @@
 			{
 				DisplayPrompt(prompt, additionalInfo, infoColor);
 				
-				input = Console.ReadLine()?.Trim();
+				input = Console.ReadLine()?.Trim().Trim('"');;
 
 				if (!required && string.IsNullOrEmpty(input))
 				{

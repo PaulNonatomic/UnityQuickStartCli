@@ -1,74 +1,88 @@
-﻿namespace UnityQuickStart.App.IO
+﻿using System.Collections.Generic;
+
+namespace UnityQuickStart.App.IO
 {
     public class CommandLineArgs
     {
-        public Dictionary<string, string> NamedArguments { get; private set; }
-        public List<string> PositionalArguments { get; private set; }
-        public HashSet<string> Flags { get; private set; }
-
+        private readonly Dictionary<string, string> _params;
         private readonly Dictionary<string, string> _aliases;
 
-        public CommandLineArgs(string[] args, Dictionary<string, string> aliases = null)
+        public CommandLineArgs(string[] args)
         {
-            NamedArguments = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-            PositionalArguments = new List<string>();
-            Flags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-
-            _aliases = aliases ?? new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-            Parse(args);
-        }
-
-        private void Parse(string[] args)
-        {
-            for (int i = 0; i < args.Length; i++)
+            _params = new Dictionary<string, string>();
+            _aliases = new Dictionary<string, string>
             {
-                string arg = args[i];
-                if (arg.StartsWith("--"))
-                {
-                    string key = arg.Substring(2);
-                    key = ResolveAlias(key);
+                { "h", "help" },
+                { "p", "path" },
+                { "c", "clear" },
+                { "v", "version" }
+            };
 
-                    if (i + 1 < args.Length && !args[i + 1].StartsWith("-"))
-                    {
-                        NamedArguments[key] = args[++i];
-                    }
-                    else
-                    {
-                        Flags.Add(key);
-                    }
-                }
-                else if (arg.StartsWith("-"))
+            for (var i = 0; i < args.Length; i++)
+            {
+                var arg = args[i];
+
+                if (!arg.StartsWith("-"))
                 {
-                    string key = arg.Substring(1);
-                    key = ResolveAlias(key);
-                    Flags.Add(key);
+                    continue;
+                }
+
+                string key;
+                string value;
+
+                if (arg.StartsWith("-") && arg.Length == 2 && i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+                {
+                    key = arg[1..];
+                    value = args[++i];
+                }
+                else if (arg.StartsWith("--"))
+                {
+                    var parts = arg[2..].Split(new[] { '=' }, 2);
+                    key = parts[0];
+                    value = parts.Length > 1 ? parts[1] : string.Empty;
+                    if (string.IsNullOrEmpty(value) && i + 1 < args.Length && !args[i + 1].StartsWith("-"))
+                    {
+                        value = args[++i];
+                    }
                 }
                 else
                 {
-                    PositionalArguments.Add(arg);
+                    key = arg[1..];
+                    value = string.Empty;
                 }
+
+                if (_aliases.TryGetValue(key, out var alias))
+                {
+                    key = alias;
+                }
+
+                _params[key.ToLower()] = value;
             }
         }
 
-        private string ResolveAlias(string key)
+        public bool Contains(string arg)
         {
-            return _aliases.TryGetValue(key, out string primary) ? primary : key;
+            return _params.ContainsKey(arg.ToLower());
         }
 
-        public bool TryGetNamedArgument(string key, out string value)
+        public string Get(string arg, string defaultValue = "")
         {
-            return NamedArguments.TryGetValue(ResolveAlias(key), out value);
+            return _params.TryGetValue(arg.ToLower(), out var param) ? param : defaultValue;
         }
 
-        public bool HasFlag(string flag)
+        public int GetInt(string arg, int defaultValue = 0)
         {
-            return Flags.Contains(ResolveAlias(flag));
+            return int.TryParse(Get(arg), out var intValue) ? intValue : defaultValue;
         }
 
-        public string GetPositionalArgument(int index)
+        public float GetFloat(string arg, float defaultValue = 0)
         {
-            return index < PositionalArguments.Count ? PositionalArguments[index] : null;
+            return float.TryParse(Get(arg), out var floatValue) ? floatValue : defaultValue;
+        }
+
+        public bool GetBool(string arg, bool defaultValue = false)
+        {
+            return bool.TryParse(Get(arg), out var boolValue) ? boolValue : defaultValue;
         }
     }
 }
