@@ -8,7 +8,40 @@ namespace UnityQuickStart.App.Project
 		public UserSettings UserSettings { get; private set; } = new();
 		public string ProjectName { get; private set; }
 		public string ProjectPath { get; private set; }
+		public CommandLineArgs Args { get; }
+		
+		public QuickStartProject(string[] args)
+		{
+			Args = new CommandLineArgs(args);
+			ProcessArgs();
+		}
 
+		private void ProcessArgs()
+		{
+			ClearSettings();
+			SetUnityPath();
+		}
+
+		private void SetUnityPath()
+		{
+			var path = Args.Get(Constants.Path);
+			if (!string.IsNullOrEmpty(path))
+			{
+				UserSettings.SetUnityInstallPath(path);
+			}
+		}
+
+		private void ClearSettings()
+		{
+			if (!Args.Contains(Constants.Clear)) return;
+		
+			UserSettings.Clear();
+		
+			Output.WriteSuccessWithTick($"Settings cleared");
+		
+			return;
+		}
+		
 		public async Task SetProjectName()
 		{
 			var currentDirectoryName = Path.GetFileName(Environment.CurrentDirectory);
@@ -62,12 +95,12 @@ namespace UnityQuickStart.App.Project
 				"Enter the project path: ",
 				required: false
 			);
-
+		
 			if (string.IsNullOrEmpty(projectPath))
 			{
 				projectPath = Environment.CurrentDirectory;
 			}
-
+		
 			//@Todo add support for relative paths
 			var isPathRooted = Path.IsPathRooted(projectPath);
 		
@@ -76,7 +109,7 @@ namespace UnityQuickStart.App.Project
 			{
 				Output.WriteError("Invalid path");
 				var createPath = UserInput.GetYesNo($"Would you like to create the path: {projectPath}");
-
+		
 				if (createPath)
 				{
 					try
@@ -91,7 +124,7 @@ namespace UnityQuickStart.App.Project
 					}
 				}
 			}
-
+		
 			ProjectPath = projectPath;
 			Directory.SetCurrentDirectory(projectPath);
 			Output.WriteSuccessWithTick($"Ok project path set: {projectPath}");

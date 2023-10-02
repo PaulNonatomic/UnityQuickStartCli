@@ -22,11 +22,11 @@ namespace UnityQuickStart.App.HelpSystem
 
 			// Options
 			Output.WriteSectionHeader("Options:");
-			Output.WriteLine("  -h --help               Show this help page.");
-			Output.WriteLine("  -sup --set-unity-path   Set the Unity installation path.");
-			Output.WriteLine("  -cs --clear-settings    Resets the settings to default.");
+			Output.WriteLine("  -h --help    Show the help page.");
+			Output.WriteLine("  -p --path    Set the Unity installation path.");
+			Output.WriteLine("  -c --clear   Resets the settings to default.");
 			Output.WriteLine();
-
+				
 			// Examples
 			Output.WriteSectionHeader("Examples:");
 			Output.WriteLine($@"  unityquick --set-unity-path {Constants.DefaultUnityPath}");
