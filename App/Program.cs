@@ -40,15 +40,15 @@ namespace UnityQuickStart.App
 
 			});
 
-			if (string.IsNullOrEmpty(_userSettings.GetUnityInstallPath()))
+			if (string.IsNullOrEmpty(_userSettings.UnityInstallPath))
 			{
 				await EnterUnityPath();
 			}
 
 			await SetUnityVersion();
 			
-			var installPath = _userSettings.GetUnityInstallPath();
-			var unityVersion = _userSettings.GetUnityVersion();
+			var installPath = _userSettings.UnityInstallPath;
+			var unityVersion = _userSettings.UnityVersion;
 			
 			await _project.SetProjectPath();
 			await _project.SetProjectName();
@@ -86,9 +86,9 @@ namespace UnityQuickStart.App
 		{
 			while (true)
 			{
-				var installPath = _userSettings.GetUnityInstallPath();
+				var installPath = _userSettings.UnityInstallPath;
 				var versions = PathUtils.CommaSeperatedDirectoryList(installPath);
-				var lastVersion = _userSettings.GetUnityVersion();
+				var lastVersion = _userSettings.UnityVersion;
 
 				Output.WriteInfo($@"Available versions: {versions}");
 
