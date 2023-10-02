@@ -101,17 +101,29 @@ public class Git
 			return success;
 		}
 
-		var exists = await DoesRepoExist(project);
-		return false;
-		// success = await MakeRemoteRepo(project);
-		//
-		// return success;
+		var username = await GetGithubUsername(project);
+		if (string.IsNullOrEmpty(username))
+		{
+			//not logged into Github
+			return false;
+		}
+		
+		var projectExists = await DoesRepoExist(project, username);
+		if (projectExists)
+		{
+			//connect existing repo
+			success = await LinkToRemoteRepo(project, username);
+		}
+		else
+		{
+			success = await MakeRemoteRepo(project);
+		}
+		
+		return success;
 	}
 	
-	private async Task<bool> DoesRepoExist(QuickStartProject project)
+	private async Task<string> GetGithubUsername(QuickStartProject project)
 	{
-		var exists = false;
-		
 		try
 		{
 			var process = new Process
@@ -119,7 +131,7 @@ public class Git
 				StartInfo = new ProcessStartInfo
 				{
 					FileName = "gh",
-					Arguments = "api api user --jq \".login\"",
+					Arguments = @"api user --jq .login",
 					RedirectStandardOutput = true,
 					RedirectStandardError = true,
 					UseShellExecute = false,
@@ -134,24 +146,49 @@ public class Git
 			
 			if (process.ExitCode == 0)
 			{
-				exists = true;
-				Output.WriteSuccessWithTick($"Ok Github username {output}");
+				return output.Replace("\n", "");
 			}
 			else
 			{
-				exists = false;
-				Output.WriteError($"Github failed to find username: {error}");
+				Output.WriteError($"Github could not authenticate login");
+				return string.Empty;
 			}
 		}
 		catch (Exception ex)
 		{
-			exists = false;
-			Output.WriteError($"Github failed to find username: {ex.Message}");
+			Output.WriteError($"Github could not authenticate. Please login");
+			return string.Empty;
 		}
-		
-		return exists;
 	}
 
+	private async Task<bool> DoesRepoExist(QuickStartProject project, string username)
+	{
+		try
+		{
+			var process = new Process
+			{
+				StartInfo = new ProcessStartInfo
+				{
+					FileName = "gh",
+					Arguments = $"repo view {username}/{project.ProjectName}",
+					RedirectStandardOutput = true,
+					RedirectStandardError = true,
+					UseShellExecute = false,
+					CreateNoWindow = true
+				}
+			};
+
+			process.Start();
+			process.WaitForExit();
+			
+			return process.ExitCode == 0;
+		}
+		catch (Exception ex)
+		{
+			return false;
+		}
+	}
+	
 	private async Task<bool> MakeRemoteRepo(QuickStartProject project)
 	{
 		var success = false;
@@ -192,6 +229,49 @@ public class Git
 		{
 			success = false;
 			Output.WriteError($"Github repo creation failed: {ex.Message}");
+		}
+		
+		return success;
+	}
+	
+	private async Task<bool> LinkToRemoteRepo(QuickStartProject project, string username)
+	{
+		var success = false;
+		
+		try
+		{
+			var process = new Process
+			{
+				StartInfo = new ProcessStartInfo
+				{
+					FileName = "git",
+					Arguments = $"remote add origin https://github.com/{username}/{project.ProjectName}.git",
+					RedirectStandardOutput = true,
+					RedirectStandardError = true,
+					UseShellExecute = false,
+					CreateNoWindow = true
+				}
+			};
+
+			process.Start();
+			var error = process.StandardError.ReadToEnd();
+			process.WaitForExit();
+			
+			if (process.ExitCode == 0)
+			{
+				success = true;
+				Output.WriteSuccessWithTick($"Ok Github repo {project.ProjectName} linked");
+			}
+			else
+			{
+				success = false;
+				Output.WriteError($"Linking Github repo failed: {error}");
+			}
+		}
+		catch (Exception ex)
+		{
+			success = false;
+			Output.WriteError($"Linking Github repo failed: {ex.Message}");
 		}
 		
 		return success;
