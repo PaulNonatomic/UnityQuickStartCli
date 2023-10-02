@@ -44,35 +44,43 @@ public class Git
         		
 		try
 		{
-			var process = new Process
+			var cts = new CancellationTokenSource();
+			var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, "Creating local repo"));
+			
+			var psi = new ProcessStartInfo
 			{
-				StartInfo = new ProcessStartInfo
-				{
-					FileName = "git",
-					Arguments = "init",
-					WorkingDirectory = project.ProjectPath,
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
-				}
+				FileName = "git",
+				Arguments = "init",
+				WorkingDirectory = project.ProjectPath,
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true
 			};
-        
-			await Task.Run(() => process.Start());
-			var error = await process.StandardError.ReadToEndAsync();
-			await Task.Run(() => process.WaitForExit());
-        
-			process.WaitForExit();
-        
-			if (process.ExitCode == 0)
+
+			using (var process = new Process())
 			{
-				success = true;
-				Output.WriteSuccessWithTick($"Ok local repo created in {project.ProjectPath}");
-			}
-			else
-			{
-				success = false;
-				Output.WriteError($"Repo creation failed: {error}");
+				process.StartInfo = psi;
+
+				await Task.Run(() => process.Start());
+				await Task.Run(() => process.WaitForExit());
+
+				cts.Cancel();
+				await spinnerTask;
+
+				var output = await process.StandardOutput.ReadToEndAsync();
+				var error = await process.StandardError.ReadToEndAsync();
+
+				if (process.ExitCode == 0)
+				{
+					success = true;
+					Output.WriteSuccessWithTick($"Ok local repo created in {project.ProjectPath}");
+				}
+				else
+				{
+					success = false;
+					Output.WriteError($"Repo creation failed: {error}");
+				}
 			}
 		}
 		catch (Exception ex)
@@ -126,32 +134,41 @@ public class Git
 	{
 		try
 		{
-			var process = new Process
+			var cts = new CancellationTokenSource();
+			var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, "Opening Unity project"));
+			
+			var psi = new ProcessStartInfo
 			{
-				StartInfo = new ProcessStartInfo
-				{
-					FileName = "gh",
-					Arguments = @"api user --jq .login",
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
-				}
+				FileName = "gh",
+				Arguments = @"api user --jq .login",
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true
 			};
 
-			process.Start();
-			var output = process.StandardOutput.ReadToEnd();
-			var error = process.StandardError.ReadToEnd();
-			process.WaitForExit();
-			
-			if (process.ExitCode == 0)
+			using (var process = new Process())
 			{
-				return output.Replace("\n", "");
-			}
-			else
-			{
-				Output.WriteError($"Github could not authenticate login");
-				return string.Empty;
+				process.StartInfo = psi;
+
+				await Task.Run(() => process.Start());
+				await Task.Run(() => process.WaitForExit());
+
+				cts.Cancel();
+				await spinnerTask;
+
+				var output = await process.StandardOutput.ReadToEndAsync();
+				var error = await process.StandardError.ReadToEndAsync();
+
+				if (process.ExitCode == 0)
+				{
+					return output.Replace("\n", "");
+				}
+				else
+				{
+					Output.WriteError($"Github could not authenticate login");
+					return string.Empty;
+				}
 			}
 		}
 		catch (Exception ex)
@@ -165,23 +182,31 @@ public class Git
 	{
 		try
 		{
-			var process = new Process
-			{
-				StartInfo = new ProcessStartInfo
-				{
-					FileName = "gh",
-					Arguments = $"repo view {username}/{project.ProjectName}",
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
-				}
-			};
-
-			process.Start();
-			process.WaitForExit();
+			var cts = new CancellationTokenSource();
+			var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, $"Checking for existing repos with name: {project.ProjectName}"));
 			
-			return process.ExitCode == 0;
+			var psi = new ProcessStartInfo
+			{
+				FileName = "gh",
+				Arguments = $"repo view {username}/{project.ProjectName}",
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true
+			};
+			
+			using (var process = new Process())
+			{
+				process.StartInfo = psi;
+
+				await Task.Run(() => process.Start());
+				await Task.Run(() => process.WaitForExit());
+
+				cts.Cancel();
+				await spinnerTask;
+
+				return process.ExitCode == 0;
+			}
 		}
 		catch (Exception ex)
 		{
@@ -195,34 +220,42 @@ public class Git
 		
 		try
 		{
-			var process = new Process
-			{
-				StartInfo = new ProcessStartInfo
-				{
-					FileName = "gh",
-					Arguments = $"repo create {project.ProjectName} --private --source {project.ProjectPath}",
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
-				}
-			};
-
-			process.Start();
-
-			var output = process.StandardOutput.ReadToEnd();
-			var error = process.StandardError.ReadToEnd();
-			process.WaitForExit();
+			var cts = new CancellationTokenSource();
+			var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, "Creating remote Githubt repo"));
 			
-			if (process.ExitCode == 0)
+			var psi = new ProcessStartInfo
 			{
-				success = true;
-				Output.WriteSuccessWithTick($"Ok Github repo {project.ProjectName} created");
-			}
-			else
+				FileName = "gh",
+				Arguments = $"repo create {project.ProjectName} --private --source {project.ProjectPath}",
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true
+			};
+			
+			using (var process = new Process())
 			{
-				success = false;
-				Output.WriteError($"Github repo creation failed: {error}");
+				process.StartInfo = psi;
+
+				await Task.Run(() => process.Start());
+				await Task.Run(() => process.WaitForExit());
+
+				cts.Cancel();
+				await spinnerTask;
+
+				var output = await process.StandardOutput.ReadToEndAsync();
+				var error = await process.StandardError.ReadToEndAsync();
+
+				if (process.ExitCode == 0)
+				{
+					success = true;
+					Output.WriteSuccessWithTick($"Ok Github repo {project.ProjectName} created");
+				}
+				else
+				{
+					success = false;
+					Output.WriteError($"Github repo creation failed: {error}");
+				}
 			}
 		}
 		catch (Exception ex)
@@ -240,32 +273,42 @@ public class Git
 		
 		try
 		{
-			var process = new Process
-			{
-				StartInfo = new ProcessStartInfo
-				{
-					FileName = "git",
-					Arguments = $"remote add origin https://github.com/{username}/{project.ProjectName}.git",
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
-				}
-			};
-
-			process.Start();
-			var error = process.StandardError.ReadToEnd();
-			process.WaitForExit();
+			var cts = new CancellationTokenSource();
+			var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, "Linking local repo to remote repo"));
 			
-			if (process.ExitCode == 0)
+			var psi = new ProcessStartInfo
 			{
-				success = true;
-				Output.WriteSuccessWithTick($"Ok Github repo {project.ProjectName} linked");
-			}
-			else
+				FileName = "git",
+				Arguments = $"remote add origin https://github.com/{username}/{project.ProjectName}.git",
+				RedirectStandardOutput = true,
+				RedirectStandardError = true,
+				UseShellExecute = false,
+				CreateNoWindow = true
+			};
+			
+			using (var process = new Process())
 			{
-				success = false;
-				Output.WriteError($"Linking Github repo failed: {error}");
+				process.StartInfo = psi;
+
+				await Task.Run(() => process.Start());
+				await Task.Run(() => process.WaitForExit());
+
+				cts.Cancel();
+				await spinnerTask;
+
+				var output = await process.StandardOutput.ReadToEndAsync();
+				var error = await process.StandardError.ReadToEndAsync();
+
+				if (process.ExitCode == 0)
+				{
+					success = true;
+					Output.WriteSuccessWithTick($"Ok Github repo {project.ProjectName} linked");
+				}
+				else
+				{
+					success = false;
+					Output.WriteError($"Linking Github repo failed: {error}");
+				}
 			}
 		}
 		catch (Exception ex)

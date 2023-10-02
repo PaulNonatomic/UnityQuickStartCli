@@ -23,7 +23,8 @@ namespace UnityQuickStart.App
 			_untiyCli = new UnityCli();
 			_project = new QuickStartProject();
 			_userSettings = new UserSettings();
-
+			await _userSettings.LoadSettings();
+			
 			await Parser.Default.ParseArguments<Options>(args).WithParsedAsync(async options =>
 			{
 				if (options.Clear)

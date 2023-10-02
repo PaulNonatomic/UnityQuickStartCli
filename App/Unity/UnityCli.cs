@@ -1,7 +1,6 @@
 ﻿using System.Diagnostics;
 using UnityQuickStart.App.IO;
 using UnityQuickStart.App.Project;
-using UnityQuickStart.App.Settings;
 
 namespace UnityQuickStart.App.Unity
 {
@@ -26,30 +25,40 @@ namespace UnityQuickStart.App.Unity
 
 			try
 			{
-				var process = new Process
+				var cts = new CancellationTokenSource();
+				var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, "Opening Unity project"));
+				
+				var psi = new ProcessStartInfo
 				{
-					StartInfo = new ProcessStartInfo
-					{
-						FileName = fileName,
-						Arguments = cliArgs,
-						RedirectStandardOutput = true,
-						RedirectStandardError = true,
-						UseShellExecute = false,
-						CreateNoWindow = true
-					}
+					FileName = fileName,
+					Arguments = cliArgs,
+					RedirectStandardOutput = true,
+					RedirectStandardError = true,
+					UseShellExecute = false,
+					CreateNoWindow = true
 				};
 
-				await Task.Run(() => process.Start());
-				var error = await process.StandardError.ReadToEndAsync();
-				await Task.Run(() => process.WaitForExit());
+				using (var process = new Process())
+				{
+					process.StartInfo = psi;
 
-				if (process.ExitCode == 0)
-				{
-					Output.WriteSuccessWithTick($"Ok Unity {unityVersion} project opened at {project.ProjectPath}");
-				}
-				else
-				{
-					Output.WriteError($"Opening Unity project at {project.ProjectPath} failed: {error}");
+					await Task.Run(() => process.Start());
+					await Task.Run(() => process.WaitForExit());
+
+					cts.Cancel();
+					await spinnerTask;
+
+					var output = await process.StandardOutput.ReadToEndAsync();
+					var error = await process.StandardError.ReadToEndAsync();
+
+					if (process.ExitCode == 0)
+					{
+						Output.WriteSuccessWithTick($"Ok Unity {unityVersion} project opened at {project.ProjectPath}");
+					}
+					else
+					{
+						Output.WriteError($"Opening Unity project at {project.ProjectPath} failed: {error}");
+					}
 				}
 			}
 			catch (Exception ex)
