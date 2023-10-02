@@ -6,20 +6,19 @@ namespace UnityQuickStart.App.Settings
 	{
 		private readonly string _settingsPath;
 
-		public string UnityInstallPath { get; private set; } = string.Empty;
-		public string UnityVersion { get; private set; } = string.Empty;
+		public string UnityInstallPath { get; set; }
+		public string UnityVersion { get; set; }
 
 		public UserSettings(string settingsPath = "settings.json")
 		{
 			_settingsPath = settingsPath;
-			LoadSettings();
 		}
 
-		private void LoadSettings()
+		public async Task LoadSettings()
 		{
 			if (File.Exists(_settingsPath))
 			{
-				var json = File.ReadAllText(_settingsPath);
+				var json = await File.ReadAllTextAsync (_settingsPath);
 				JsonConvert.PopulateObject(json, this);
 			}
 			else
