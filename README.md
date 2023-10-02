@@ -11,6 +11,20 @@ UnityQuickStartCli is a command-line interface (CLI) tool designed to automate t
 - **Customizable Settings**: Allows you to set Unity installation paths and versions.
 - **User-Friendly Interface**: Provides a clean and straightforward CLI.
 
+## Dependencies
+
+To run this project, you'll need the following software installed:
+
+- [.NET SDK](https://dotnet.microsoft.com/download)
+- [GitHub CLI](https://cli.github.com/)
+- [Unity](https://unity.com/)
+
+### Installation Steps
+
+1. **.NET SDK**: Download and install from [here](https://dotnet.microsoft.com/download).
+2. **GitHub CLI**: Follow the installation guide [here](https://cli.github.com/).
+3. **Unity**: Download and install Unity Hub from [here](https://unity.com/download).
+
 ## Installation
 
 ### Global Installation
