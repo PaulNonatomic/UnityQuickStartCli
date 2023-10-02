@@ -101,4 +101,4 @@ $RECYCLE.BIN/
 ScaffoldingReadMe.txt
 
 # Distribution artifacts
-/build/
+*.nupkg
