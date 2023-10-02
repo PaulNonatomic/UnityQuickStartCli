@@ -7,5 +7,6 @@
 		public const string Path = "path";
 		public const string Clear = "clear";
 		public const string Help = "help";
+		public static string Version = "version";
 	}
 }

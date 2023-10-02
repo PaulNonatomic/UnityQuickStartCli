@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using UnityQuickStart.App.IO;
 using UnityQuickStart.App.Settings;
@@ -146,6 +147,12 @@ namespace UnityQuickStart.App.Project
 			{
 				Console.WriteLine("Unsupported OS");
 			}
+		}
+
+		public void LogVersion()
+		{
+			var version = Assembly.GetExecutingAssembly().GetName().Version;
+			Output.WriteInfo($"Application Version: {version}");
 		}
 	}
 }
