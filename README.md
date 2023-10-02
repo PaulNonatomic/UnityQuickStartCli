@@ -29,10 +29,13 @@ To run this project, you'll need the following software installed:
 
 ### Global Installation
 
-To install the tool globally, navigate to the project directory and run:
+1. Download the latest NuGet package from the [releases page](https://github.com/octo-org/octo-repo/releases/latest).
+2. To install the tool globally replacing <path> with the path to the directory containing the NuGet package.
+
+<b>Note do not set the path directly to the NuGet package!</b>
 
 ```bash
-dotnet tool install UnityQuickStart --global --add-source ./dist
+dotnet tool install --global --add-source <path> UnityQuickStart
 ```
 
 ### Uninstallation
@@ -40,7 +43,7 @@ dotnet tool install UnityQuickStart --global --add-source ./dist
 To uninstall the tool:
 
 ```bash
-dotnet tool uninstall UnityQuickStart --global
+dotnet tool uninstall --global UnityQuickStart
 ```
 
 ### Build from Rider
