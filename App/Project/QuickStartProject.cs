@@ -8,42 +8,8 @@ namespace UnityQuickStart.App.Project
 {
 	public class QuickStartProject
 	{
-		public UserSettings UserSettings { get; private set; } = new();
 		public string ProjectName { get; private set; }
 		public string ProjectPath { get; private set; }
-		public CommandLineArgs Args { get; }
-		
-		public QuickStartProject(string[] args)
-		{
-			Args = new CommandLineArgs(args);
-			ProcessArgs();
-		}
-
-		private void ProcessArgs()
-		{
-			ClearSettings();
-			SetUnityPath();
-		}
-
-		private void SetUnityPath()
-		{
-			var path = Args.Get(Constants.Path);
-			if (!string.IsNullOrEmpty(path))
-			{
-				UserSettings.SetUnityInstallPath(path);
-			}
-		}
-
-		private void ClearSettings()
-		{
-			if (!Args.Contains(Constants.Clear)) return;
-		
-			UserSettings.Clear();
-		
-			Output.WriteSuccessWithTick($"Settings cleared");
-		
-			return;
-		}
 		
 		public async Task SetProjectName()
 		{

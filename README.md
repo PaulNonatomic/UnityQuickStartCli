@@ -62,7 +62,8 @@ unityquick [options]
 
 ### Options
 
-- `-h, --help`: Show the help page.
+- `--help`: Show the help page.
+- `--version`: Log the UnityQuickStartCli version.
 - `-c, --clear`: Resets the settings to default.
 - `-p, --path`: Set the Unity installation path.
 

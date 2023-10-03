@@ -5,38 +5,21 @@ namespace UnityQuickStart.App.Settings
 	public class UserSettings
 	{
 		private readonly string _settingsPath;
-		private Dictionary<string, string> _settings = new();
-		
-		private const string UnityInstallPath = "UnityInstallPath";
-		private const string UnityVersion = "UnityVersion";
+
+		public string UnityInstallPath { get; set; }
+		public string UnityVersion { get; set; }
 
 		public UserSettings(string settingsPath = "settings.json")
 		{
 			_settingsPath = settingsPath;
-			
-			InstantiateSettings();
-			LoadSettings();
 		}
 
-		private void LoadSettings()
+		public async Task LoadSettings()
 		{
 			if (File.Exists(_settingsPath))
 			{
-				var settingsJson = File.ReadAllText(_settingsPath);
-				var settings = JsonConvert.DeserializeObject<Dictionary<string, string>>(settingsJson);
-				if (settings == null) return;
-				
-				foreach (var kvp in settings)
-				{
-					if (_settings.ContainsKey(kvp.Key))
-					{
-						_settings[kvp.Key]= kvp.Value;
-					}
-					else
-					{
-						_settings.Add(kvp.Key, kvp.Value);
-					}
-				}
+				var json = await File.ReadAllTextAsync (_settingsPath);
+				JsonConvert.PopulateObject(json, this);
 			}
 			else
 			{
@@ -46,44 +29,26 @@ namespace UnityQuickStart.App.Settings
 
 		private void SaveSettings()
 		{
-			File.WriteAllText(_settingsPath, JsonConvert.SerializeObject(_settings, Formatting.Indented));
-		}
-
-		public string GetUnityInstallPath()
-		{
-			return _settings[UnityInstallPath];
+			File.WriteAllText(_settingsPath, JsonConvert.SerializeObject(this, Formatting.Indented));
 		}
 
 		public void SetUnityInstallPath(string newPath)
 		{
-			_settings[UnityInstallPath] = newPath;
+			UnityInstallPath = newPath;
 			SaveSettings();
 		}
 		
-		public string GetUnityVersion()
-		{
-			return _settings[UnityVersion];
-		}
-
 		public void SetUnityVersion(string version)
 		{
-			_settings[UnityVersion] = version;
+			UnityVersion = version;
 			SaveSettings();
 		}
 
 		public void Clear()
 		{
-			InstantiateSettings();
+			UnityVersion = string.Empty;
+			UnityInstallPath = string.Empty;
 			SaveSettings();
-		}
-
-		private void InstantiateSettings()
-		{
-			_settings = new Dictionary<string, string>
-			{
-				{ UnityInstallPath, string.Empty },
-				{ UnityVersion, string.Empty }
-			};
 		}
 	}
 }
