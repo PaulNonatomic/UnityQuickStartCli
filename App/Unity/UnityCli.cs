@@ -13,112 +13,46 @@ namespace UnityQuickStart.App.Unity
 
 		public async Task OpenUnityProject(QuickStartProject project, string unityVersion, string installPath)
 		{
-			var fileName = GetPathToUnityVersion(installPath, unityVersion);
-			var cliArgs = $"-projectPath {project.ProjectPath}";
-
 			var createRepo = UserInput.GetYesNo($"Would you like to open the Unity project at {project.ProjectPath}:");
 			if (!createRepo)
 			{
 				Output.WriteSuccessWithTick($"Ok skip opening the project");
 				return;
 			}
-
-			try
-			{
-				var cts = new CancellationTokenSource();
-				var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, "Opening Unity project"));
-				
-				var psi = new ProcessStartInfo
+			
+			const string processMsg = "Opening Unity project";
+			var fileName = GetPathToUnityVersion(installPath, unityVersion);
+			var args = $"-projectPath {project.ProjectPath}";
+		
+			await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
+				(output) =>
 				{
-					FileName = fileName,
-					Arguments = cliArgs,
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true
-				};
-
-				using (var process = new Process())
+					Output.WriteSuccessWithTick($"Ok Unity {unityVersion} project opened at {project.ProjectPath}");
+				},
+				(error) =>
 				{
-					process.StartInfo = psi;
-
-					await Task.Run(() => process.Start());
-					await Task.Run(() => process.WaitForExit());
-
-					cts.Cancel();
-					await spinnerTask;
-
-					var output = await process.StandardOutput.ReadToEndAsync();
-					var error = await process.StandardError.ReadToEndAsync();
-
-					if (process.ExitCode == 0)
-					{
-						Output.WriteSuccessWithTick($"Ok Unity {unityVersion} project opened at {project.ProjectPath}");
-					}
-					else
-					{
-						Output.WriteError($"Opening Unity project at {project.ProjectPath} failed: {error}");
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				Output.WriteError($"Opening Unity project at {project.ProjectPath} failed: {ex.Message}");
-			}
+					Output.WriteError($"Opening Unity project at {project.ProjectPath} failed: {error}");
+				});
 		}
 
 		public async Task<bool> CreateUnityProject(QuickStartProject project, string unityVersion, string installPath)
 		{
-			var success = false;
+			const string processMsg = "Creating Unity project";
 			var fileName = GetPathToUnityVersion(installPath, unityVersion);
-			var cliArgs = @$"-batchmode -quit -createProject {project.ProjectPath}";
-
-			try
-			{
-				var cts = new CancellationTokenSource();
-				var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, "Creating Unity project"));
-
-				var psi = new ProcessStartInfo
+			var args = @$"-batchmode -quit -createProject {project.ProjectPath}";
+			var success = false;
+		
+			await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
+				(output) =>
 				{
-					FileName = fileName,
-					Arguments = cliArgs,
-					RedirectStandardOutput = true,
-					RedirectStandardError = true,
-					UseShellExecute = false,
-					CreateNoWindow = true,
-					Verb = "runas"
-				};
-
-				using (var process = new Process())
+					success = true;
+					Output.WriteSuccessWithTick($"Ok Unity {unityVersion} project created at {project.ProjectPath}");
+				},
+				(error) =>
 				{
-					process.StartInfo = psi;
-
-					await Task.Run(() => process.Start());
-					await Task.Run(() => process.WaitForExit());
-
-					cts.Cancel();
-					await spinnerTask;
-
-					var output = process.StandardOutput.ReadToEnd();
-					var error = process.StandardError.ReadToEnd();
-
-					if (process.ExitCode == 0)
-					{
-						success = true;
-						Output.WriteSuccessWithTick($"Ok Unity {unityVersion} project created at {project.ProjectPath}");
-					}
-					else
-					{
-						success = false;
-						Output.WriteError($"Unity project creation failed: {error}");
-					}
-				}
-			}
-			catch (Exception ex)
-			{
-				success = false;
-				Output.WriteError($"Unity project creation failed: {ex.Message}");
-			}
+					success = false;
+					Output.WriteError($"Unity project creation failed: {error}");
+				});
 
 			return success;
 		}
