@@ -41,53 +41,22 @@ public class Git
 			Output.WriteSuccessWithTick($"Ok skipping local repo");
 			return success; 
 		}
-        		
-		try
-		{
-			var cts = new CancellationTokenSource();
-			var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, "Creating local repo"));
-			
-			var psi = new ProcessStartInfo
+		
+		const string processMsg = "Creating local repo";
+		const string fileName = "git";
+		const string args = "init";
+		
+		await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
+			(output) =>
 			{
-				FileName = "git",
-				Arguments = "init",
-				WorkingDirectory = project.ProjectPath,
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true
-			};
-
-			using (var process = new Process())
+				success = true;
+				Output.WriteSuccessWithTick($"Ok local repo created in {project.ProjectPath}");
+			},
+			(error) =>
 			{
-				process.StartInfo = psi;
-
-				await Task.Run(() => process.Start());
-				await Task.Run(() => process.WaitForExit());
-
-				cts.Cancel();
-				await spinnerTask;
-
-				var output = await process.StandardOutput.ReadToEndAsync();
-				var error = await process.StandardError.ReadToEndAsync();
-
-				if (process.ExitCode == 0)
-				{
-					success = true;
-					Output.WriteSuccessWithTick($"Ok local repo created in {project.ProjectPath}");
-				}
-				else
-				{
-					success = false;
-					Output.WriteError($"Repo creation failed: {error}");
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			success = false;
-			Output.WriteError($"Repo creation failed: {ex.Message}");
-		}
+				success = false;
+				Output.WriteError($"Repo creation failed: {error}");
+			});
 
 		return success;
 	}
@@ -132,191 +101,84 @@ public class Git
 	
 	private async Task<string> GetGithubUsername(QuickStartProject project)
 	{
-		try
-		{
-			var cts = new CancellationTokenSource();
-			var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, "Opening Unity project"));
-			
-			var psi = new ProcessStartInfo
+		const string processMsg = "Fetching Github username";
+		const string fileName = "gh";
+		const string args = @"api user --jq .login";
+		var username = string.Empty;
+		
+		await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
+			(output) =>
 			{
-				FileName = "gh",
-				Arguments = @"api user --jq .login",
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true
-			};
-
-			using (var process = new Process())
+				username = output.Replace("\n", "");
+			},
+			(error) =>
 			{
-				process.StartInfo = psi;
+				Output.WriteError($"Github could not authenticate. Please login.");
+			});
 
-				await Task.Run(() => process.Start());
-				await Task.Run(() => process.WaitForExit());
-
-				cts.Cancel();
-				await spinnerTask;
-
-				var output = await process.StandardOutput.ReadToEndAsync();
-				var error = await process.StandardError.ReadToEndAsync();
-
-				if (process.ExitCode == 0)
-				{
-					return output.Replace("\n", "");
-				}
-				else
-				{
-					Output.WriteError($"Github could not authenticate login");
-					return string.Empty;
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			Output.WriteError($"Github could not authenticate. Please login");
-			return string.Empty;
-		}
+		return username;
 	}
 
 	private async Task<bool> DoesRepoExist(QuickStartProject project, string username)
 	{
-		try
-		{
-			var cts = new CancellationTokenSource();
-			var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, $"Checking for existing repos with name: {project.ProjectName}"));
-			
-			var psi = new ProcessStartInfo
+		var processMsg = $"Checking for existing repos with name: {project.ProjectName}";
+		const string fileName = "gh";
+		var args = $"repo view {username}/{project.ProjectName}";
+		var success = false;
+		
+		await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
+			(output) =>
 			{
-				FileName = "gh",
-				Arguments = $"repo view {username}/{project.ProjectName}",
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true
-			};
-			
-			using (var process = new Process())
+				success = true;
+			},
+			(error) =>
 			{
-				process.StartInfo = psi;
+				success = false;
+			});
 
-				await Task.Run(() => process.Start());
-				await Task.Run(() => process.WaitForExit());
-
-				cts.Cancel();
-				await spinnerTask;
-
-				return process.ExitCode == 0;
-			}
-		}
-		catch (Exception ex)
-		{
-			return false;
-		}
+		return success;
+		
 	}
 	
 	private async Task<bool> MakeRemoteRepo(QuickStartProject project)
 	{
+		const string processMsg = "Creating remote Githubt repo";
+		const string fileName = "gh";
+		var args = $"repo create {project.ProjectName} --private --source {project.ProjectPath}";
 		var success = false;
 		
-		try
-		{
-			var cts = new CancellationTokenSource();
-			var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, "Creating remote Githubt repo"));
-			
-			var psi = new ProcessStartInfo
+		await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
+			(output) =>
 			{
-				FileName = "gh",
-				Arguments = $"repo create {project.ProjectName} --private --source {project.ProjectPath}",
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true
-			};
-			
-			using (var process = new Process())
+				Output.WriteSuccessWithTick($"Ok Github repo {project.ProjectName} created");
+				success = true;
+			},
+			(error) =>
 			{
-				process.StartInfo = psi;
+				Output.WriteError($"Github repo creation failed: {error}");
+			});
 
-				await Task.Run(() => process.Start());
-				await Task.Run(() => process.WaitForExit());
-
-				cts.Cancel();
-				await spinnerTask;
-
-				var output = await process.StandardOutput.ReadToEndAsync();
-				var error = await process.StandardError.ReadToEndAsync();
-
-				if (process.ExitCode == 0)
-				{
-					success = true;
-					Output.WriteSuccessWithTick($"Ok Github repo {project.ProjectName} created");
-				}
-				else
-				{
-					success = false;
-					Output.WriteError($"Github repo creation failed: {error}");
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			success = false;
-			Output.WriteError($"Github repo creation failed: {ex.Message}");
-		}
-		
 		return success;
 	}
 	
 	private async Task<bool> LinkToRemoteRepo(QuickStartProject project, string username)
 	{
+		const string processMsg = "Linking local repo to remote repo";
+		const string fileName = "git";
+		var args = $"remote add origin https://github.com/{username}/{project.ProjectName}.git";
 		var success = false;
 		
-		try
-		{
-			var cts = new CancellationTokenSource();
-			var spinnerTask = Task.Run(() => Spinner.Spin(cts.Token, "Linking local repo to remote repo"));
-			
-			var psi = new ProcessStartInfo
+		await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
+			(output) =>
 			{
-				FileName = "git",
-				Arguments = $"remote add origin https://github.com/{username}/{project.ProjectName}.git",
-				RedirectStandardOutput = true,
-				RedirectStandardError = true,
-				UseShellExecute = false,
-				CreateNoWindow = true
-			};
-			
-			using (var process = new Process())
+				Output.WriteSuccessWithTick($"Ok Github repo {project.ProjectName} linked");
+				success = true;
+			},
+			(error) =>
 			{
-				process.StartInfo = psi;
+				Output.WriteError($"Linking Github repo failed: {error}");
+			});
 
-				await Task.Run(() => process.Start());
-				await Task.Run(() => process.WaitForExit());
-
-				cts.Cancel();
-				await spinnerTask;
-
-				var output = await process.StandardOutput.ReadToEndAsync();
-				var error = await process.StandardError.ReadToEndAsync();
-
-				if (process.ExitCode == 0)
-				{
-					success = true;
-					Output.WriteSuccessWithTick($"Ok Github repo {project.ProjectName} linked");
-				}
-				else
-				{
-					success = false;
-					Output.WriteError($"Linking Github repo failed: {error}");
-				}
-			}
-		}
-		catch (Exception ex)
-		{
-			success = false;
-			Output.WriteError($"Linking Github repo failed: {ex.Message}");
-		}
-		
 		return success;
 	}
 }
