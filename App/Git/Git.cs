@@ -122,7 +122,11 @@ public class Git
 		}
 
 		var loggedIn = await IsUserLoggedIn(project);
-		if (!loggedIn) await Login(project);
+		if (!loggedIn)
+		{
+			Output.WriteError($"Github could not authenticate. Please login");
+			return false;
+		}
 
 		var username = await GetGithubUsername(project);
 		if (string.IsNullOrEmpty(username))
@@ -166,9 +170,9 @@ public class Git
 	private async Task<string> SelectOrganisation(QuickStartProject project, UserSettings userSettings, List<string> organisations)
 	{
 		var orgString = string.Join(", ", organisations);
-		Output.WriteLine();
-		Output.WriteInfo($"Available organisations: {orgString}");
-		var useOrg = UserInput.GetYesNo("Would you like to use an organisation:");
+		Output.WriteLine("\n\r");
+		Output.WriteInfo($@"Available organisations: {orgString}");
+		var useOrg = UserInput.GetYesNo($@"Would you like to use an organisation:");
 		if (!useOrg)
 		{
 			return string.Empty;
@@ -177,7 +181,7 @@ public class Git
 		var lastOrgansation = userSettings.GithubOrganisation;
 		if (string.IsNullOrEmpty(lastOrgansation)) lastOrgansation = organisations[0];
 		
-		Output.WriteLine();
+		Output.WriteLine("\n\r");
 		Output.WriteInfo($"Available organisations: {orgString}");
 		Output.WriteHint($"Press enter to use organisation: {lastOrgansation}");
 		var selectedOrganisation = UserInput.GetString($"Enter an organisation:", required: false);
@@ -219,9 +223,9 @@ public class Git
 		var organisations = new List<string>();
 		
 		await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
-			(output) =>
+			(result) =>
 			{
-				organisations = output.Split("\n").ToList();
+				organisations = result.Split("\n").ToList();
 			},
 			(error) =>
 			{

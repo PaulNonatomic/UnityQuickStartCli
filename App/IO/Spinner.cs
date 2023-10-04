@@ -13,6 +13,6 @@ public class Spinner
 			Thread.Sleep(200);
 		}
 		
-		Console.Write("\r                  \r");
+		Console.Write("\r							     \r");
 	}
 }
