@@ -16,6 +16,7 @@ public class ProcessExecutor
 			{
 				FileName = fileName,
 				Arguments = arguments,
+				RedirectStandardInput = true,
 				RedirectStandardOutput = true,
 				RedirectStandardError = true,
 				UseShellExecute = false,
