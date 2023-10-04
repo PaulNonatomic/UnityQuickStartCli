@@ -1,7 +1,7 @@
-﻿using System.Diagnostics;
-using System.Reflection;
+﻿using System.Reflection;
 using UnityQuickStart.App.IO;
 using UnityQuickStart.App.Project;
+using UnityQuickStart.App.Settings;
 
 namespace UnityQuickStart.App.Github;
 
@@ -61,13 +61,56 @@ public class Git
 		return success;
 	}
 
+	public async Task<bool> IsUserLoggedIn(QuickStartProject project)
+	{
+		const string processMsg = "Check Github auth status";
+		const string fileName = "gh";
+		const string args = @"auth status";
+		var isLoggedIn = false;
+		
+		await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
+			(output) =>
+			{
+				var result = output.Replace("\n", "");
+
+				isLoggedIn = result.Contains("Logged in to");
+			},
+			(error) =>
+			{
+				isLoggedIn = false;
+			});
+
+		return isLoggedIn;
+	}
+
+	public async Task<string> Login(QuickStartProject project)
+	{
+		const string processMsg = "Logging into Github";
+		const string fileName = "gh";
+		const string args = @"auth login";
+		var result = string.Empty;
+		
+		await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
+			(output) =>
+			{
+				result = output.Replace("\n", "");
+				Output.WriteError($"Github {result}");
+			},
+			(error) =>
+			{
+				Output.WriteError($"Github could not authenticate. Please login: {error}");
+			});
+
+		return result;
+	}
+
 	/// <summary>
 	/// @Todo add support for Github teams
 	/// @Todo add support for Github templates
 	/// </summary>
 	/// <param name="project"></param>
 	/// <returns></returns>
-	public async Task<bool> CreateRemoteRepo(QuickStartProject project)
+	public async Task<bool> CreateRemoteRepo(QuickStartProject project, UserSettings userSettings)
 	{
 		var success = false;
 		
@@ -78,6 +121,9 @@ public class Git
 			return success;
 		}
 
+		var loggedIn = await IsUserLoggedIn(project);
+		if (!loggedIn) await Login(project);
+
 		var username = await GetGithubUsername(project);
 		if (string.IsNullOrEmpty(username))
 		{
@@ -85,20 +131,66 @@ public class Git
 			return false;
 		}
 		
+		var organisations = await GetGithubOrganisations(project);
+		
+		if (organisations.Count > 0)
+		{
+			var selectedOrganisation = await SelectOrganisation(project, userSettings, organisations);
+			if (!string.IsNullOrEmpty(selectedOrganisation))
+			{
+				username = selectedOrganisation;
+			}
+		}
+		
 		var projectExists = await DoesRepoExist(project, username);
 		if (projectExists)
 		{
-			//connect existing repo
-			success = await LinkToRemoteRepo(project, username);
+			var connect = UserInput.GetYesNo($"Do you want to connect to existing repo https://github.com/{username}/{project.ProjectName}.git");
+			if (connect)
+			{
+				success = await LinkToRemoteRepo(project, username);
+			}
+			else
+			{
+				Output.WriteSuccessWithTick("Ok you should consider using a different project name, github account, or organisation");
+			}
 		}
 		else
 		{
-			success = await MakeRemoteRepo(project);
+			success = await MakeRemoteRepo(project, username);
 		}
 		
 		return success;
 	}
-	
+
+	private async Task<string> SelectOrganisation(QuickStartProject project, UserSettings userSettings, List<string> organisations)
+	{
+		var orgString = string.Join(", ", organisations);
+		Output.WriteLine();
+		Output.WriteInfo($"Available organisations: {orgString}");
+		var useOrg = UserInput.GetYesNo("Would you like to use an organisation:");
+		if (!useOrg)
+		{
+			return string.Empty;
+		}
+		
+		var lastOrgansation = userSettings.GithubOrganisation;
+		if (string.IsNullOrEmpty(lastOrgansation)) lastOrgansation = organisations[0];
+		
+		Output.WriteLine();
+		Output.WriteInfo($"Available organisations: {orgString}");
+		Output.WriteHint($"Press enter to use organisation: {lastOrgansation}");
+		var selectedOrganisation = UserInput.GetString($"Enter an organisation:", required: false);
+		if (string.IsNullOrEmpty(selectedOrganisation))
+		{
+			selectedOrganisation = lastOrgansation;
+		}
+
+		userSettings.SetGithubOrganisation(selectedOrganisation);
+		Output.WriteSuccessWithTick($"Ok using organisation: {selectedOrganisation}");
+		return selectedOrganisation;
+	}
+
 	private async Task<string> GetGithubUsername(QuickStartProject project)
 	{
 		const string processMsg = "Fetching Github username";
@@ -113,10 +205,30 @@ public class Git
 			},
 			(error) =>
 			{
-				Output.WriteError($"Github could not authenticate. Please login.");
+				Output.WriteError($"Github could not authenticate. Please login: {error}");
 			});
 
 		return username;
+	}
+	
+	private async Task<List<string>> GetGithubOrganisations(QuickStartProject project)
+	{
+		const string processMsg = "Fetching Github organisations";
+		const string fileName = "gh";
+		const string args = @"org list";
+		var organisations = new List<string>();
+		
+		await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
+			(output) =>
+			{
+				organisations = output.Split("\n").ToList();
+			},
+			(error) =>
+			{
+				Output.WriteError($"Github could not authenticate. Please login: {error}");
+			});
+
+		return organisations;
 	}
 
 	private async Task<bool> DoesRepoExist(QuickStartProject project, string username)
@@ -140,11 +252,11 @@ public class Git
 		
 	}
 	
-	private async Task<bool> MakeRemoteRepo(QuickStartProject project)
+	private async Task<bool> MakeRemoteRepo(QuickStartProject project, string username)
 	{
 		const string processMsg = "Creating remote Githubt repo";
 		const string fileName = "gh";
-		var args = $"repo create {project.ProjectName} --private --source {project.ProjectPath}";
+		var args = $"repo create {username}/{project.ProjectName} --private --source {project.ProjectPath}";
 		var success = false;
 		
 		await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
