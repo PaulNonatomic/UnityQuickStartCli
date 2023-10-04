@@ -8,6 +8,7 @@ namespace UnityQuickStart.App.Settings
 
 		public string UnityInstallPath { get; set; }
 		public string UnityVersion { get; set; }
+		public string GithubOrganisation { get; set; }
 
 		public UserSettings(string settingsPath = "settings.json")
 		{
@@ -48,6 +49,12 @@ namespace UnityQuickStart.App.Settings
 		{
 			UnityVersion = string.Empty;
 			UnityInstallPath = string.Empty;
+			SaveSettings();
+		}
+
+		public void SetGithubOrganisation(string organisation)
+		{
+			GithubOrganisation = organisation;
 			SaveSettings();
 		}
 	}

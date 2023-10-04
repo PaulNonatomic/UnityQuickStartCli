@@ -56,7 +56,7 @@ namespace UnityQuickStart.App
 			
 			var createdLocalRepo = await _git.CreateLocalRepo(_project);
 			if(createdLocalRepo) await _git.CreateGitIgnoreFile(_project);
-			if(createdLocalRepo) await _git.CreateRemoteRepo(_project);
+			if(createdLocalRepo) await _git.CreateRemoteRepo(_project, _userSettings);
 			
 			var createdUnityProject = await _untiyCli.CreateUnityProject(_project, unityVersion, installPath);
 			if(createdUnityProject) await _untiyCli.OpenUnityProject(_project, unityVersion, installPath);
