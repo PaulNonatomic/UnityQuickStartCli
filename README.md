@@ -2,7 +2,7 @@
 
 ## Description
 
-UnityQuickStartCli is a command-line interface (CLI) tool designed to automate the setup and creation of Unity projects, as well as local and remote Git repositories. It streamlines the process of initializing a new Unity project, setting up Git repositories, and configuring project settings.
+UnityQuickStartCli is a command-line interface (CLI) tool designed to automate the setup and creation of Unity projects, as well as local and remote Git repositories. It streamlines the process of initializing a new Unity project, setting up Git repositories, and configuring project settings. In a nutshell this is a wrapper for the Unity & Github Cli's
 
 ## Features
 
