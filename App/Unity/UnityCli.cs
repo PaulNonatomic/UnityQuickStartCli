@@ -24,7 +24,7 @@ namespace UnityQuickStart.App.Unity
 			var fileName = GetPathToUnityVersion(installPath, unityVersion);
 			var args = $"-projectPath {project.ProjectPath}";
 		
-			await ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
+			ProcessExecutor.ExecuteProcess(fileName,args, processMsg, 
 				(output) =>
 				{
 					Output.WriteSuccessWithTick($"Ok Unity {unityVersion} project opened at {project.ProjectPath}");
