@@ -10,9 +10,9 @@ namespace UnityQuickStart.App.Settings
 		public string UnityVersion { get; set; }
 		public string GithubOrganisation { get; set; }
 
-		public UserSettings(string settingsPath = "settings.json")
+		public UserSettings()
 		{
-			_settingsPath = settingsPath;
+			_settingsPath = Path.Combine(AppContext.BaseDirectory, "settings.json");
 		}
 
 		public async Task LoadSettings()
