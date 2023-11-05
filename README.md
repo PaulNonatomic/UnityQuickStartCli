@@ -94,4 +94,4 @@ https://github.com/PaulNonatomic/UnityQuickStartCli/assets/4581647/6147804f-edf1
 
 This project is licensed under the MIT License. 
 
-Copyright (c) 2023 Noantomic Ltd
+Copyright (c) 2023 Nonatomic Ltd
