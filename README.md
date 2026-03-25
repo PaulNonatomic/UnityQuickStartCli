@@ -46,6 +46,12 @@ To uninstall the tool:
 dotnet tool uninstall --global UnityQuickStart
 ```
 
+## Support
+If you like my work then please consider showing your support by buying me a brew
+<br><br>
+<a href="https://www.buymeacoffee.com/nonatomic" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-green.png" alt="Buy Me A Coffee" style="height: 60px !important;width: 217px !important;" ></a>
+
+
 ### Build from Rider
 
 1. Open the project in Rider.
