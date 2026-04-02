@@ -14,6 +14,7 @@ namespace UnityQuickStart.App
 		private static UnityCli _untiyCli;
 		private static QuickStartProject _project;
 		private static UserSettings _userSettings;
+		private static UnityHub _unityHub;
 
 		static async Task Main(string[] args)
 		{
@@ -21,6 +22,7 @@ namespace UnityQuickStart.App
 
 			_git = new Git();
 			_untiyCli = new UnityCli();
+			_unityHub = new UnityHub();
 			_project = new QuickStartProject();
 			_userSettings = new UserSettings();
 			await _userSettings.LoadSettings();
@@ -59,6 +61,7 @@ namespace UnityQuickStart.App
 			if(createdLocalRepo) await _git.CreateRemoteRepo(_project, _userSettings);
 			
 			var createdUnityProject = await _untiyCli.CreateUnityProject(_project, unityVersion, installPath);
+			if (createdUnityProject) await _unityHub.AddProjectToHub(_project, _project.ProjectName, _project.ProjectPath, unityVersion);
 			if(createdUnityProject) await _untiyCli.OpenUnityProject(_project, unityVersion, installPath);
 			if(createdUnityProject) Output.WriteSuccessWithTick("Complete");
 			
